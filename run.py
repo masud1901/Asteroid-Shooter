@@ -36,6 +36,9 @@ while True:
             sys.exit()
     # frame rate limit
     clock.tick(60)
+
+    # mouse input
+    ship_rect.center = pygame.mouse.get_pos()
     # update
     pygame.display.update()
 
@@ -43,8 +46,6 @@ while True:
     display_surface.fill((200, 200, 200))
     display_surface.blit(bg_surf, (0, 0))
     display_surface.blit(text_surf, text_rect)
-    if ship_rect.y != 0:
-        ship_rect.y -= 1
     display_surface.blit(
         ship_surf,
         ship_rect,
