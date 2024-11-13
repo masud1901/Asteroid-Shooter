@@ -21,7 +21,7 @@ A classic arcade-style space shooter game built with Python and Pygame. Defend a
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/asteroid-shooter.git
+git clone https://github.com/masud1901/asteroid-shooter.git
 cd asteroid-shooter
 ```
 
