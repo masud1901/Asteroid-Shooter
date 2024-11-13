@@ -1,5 +1,6 @@
 import pygame
 from pathlib import Path
+from utils import resource_path
 
 # Display settings
 WINDOW_WIDTH = 1280
@@ -39,8 +40,9 @@ pygame.mixer.init()
 
 
 # Load assets
-def load_image(name):
-    return pygame.image.load(IMAGES_DIR / name).convert_alpha()
+def load_image(filename):
+    """Load an image from the images directory"""
+    return pygame.image.load(resource_path(f"space shooter/images/{filename}"))
 
 
 def load_sound(name):

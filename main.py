@@ -1,10 +1,26 @@
-import pygame
+import os
 import sys
 import random
-from pathlib import Path
-
+import pygame
 from components import Ship, Laser, Meteor, Explosion
 
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+# Debug prints
+print("Current working directory:", os.getcwd())
+print("Resource path for audio:", resource_path("space shooter/audio"))
+print("Resource path for images:", resource_path("space shooter/images"))
+print("Files in current directory:", os.listdir("."))
 
 # Initialize Pygame
 pygame.init()
@@ -13,8 +29,6 @@ print(f"Pygame initialization status: {pygame.get_init()}")
 
 # Initialize audio
 pygame.mixer.init()
-print(f"Pygame version: {pygame.__version__}")
-print(f"Pygame initialization status: {pygame.get_init()}")
 
 # Set up the display
 WINDOW_WIDTH = 1280
@@ -26,12 +40,15 @@ pygame.display.set_caption("Asteroid Shooter")
 clock = pygame.time.Clock()
 
 # background
-background_image = pygame.image.load("space shooter/images/background.png")
+background_image = pygame.image.load(
+    resource_path("space shooter/images/background.png")
+)
 
 # sprite groups
 spaceship_group = pygame.sprite.Group()
 laser_group = pygame.sprite.Group()
 meteor_group = pygame.sprite.Group()
+explosion_group = pygame.sprite.Group()
 
 # timer for meteor spawning
 meteor_timer = pygame.event.custom_type()
@@ -41,13 +58,15 @@ pygame.time.set_timer(meteor_timer, 500)  # Spawn meteor every 500ms
 ship = Ship(spaceship_group)
 
 # Load sound effects
-laser_sound = pygame.mixer.Sound("space shooter/audio/laser.wav")
-explosion_sound = pygame.mixer.Sound("space shooter/audio/explosion.wav")
-background_music = pygame.mixer.Sound("space shooter/audio/game_music.wav")
+laser_sound = pygame.mixer.Sound(resource_path("space shooter/audio/laser.wav"))
+explosion_sound = pygame.mixer.Sound(resource_path("space shooter/audio/explosion.wav"))
+background_music = pygame.mixer.Sound(
+    resource_path("space shooter/audio/game_music.wav")
+)
 background_music.play(loops=-1)  # Start playing background music on loop
 
 
-# Add these after the existing initialization code
+# Game states
 class GameState:
     WELCOME = "welcome"
     PLAYING = "playing"
@@ -55,18 +74,16 @@ class GameState:
 
 
 # Font setup
-font_path = "space shooter/images/Oxanium-Bold.ttf"  # Adjust path if needed
-if Path(font_path).exists():
+font_path = resource_path("space shooter/images/Oxanium-Bold.ttf")
+try:
     game_font = pygame.font.Font(font_path, 40)
-else:
-    game_font = pygame.font.Font(None, 40)  # Fallback to default font
+except:
+    print(f"Could not load font from {font_path}, using default")
+    game_font = pygame.font.Font(None, 40)
 
 # Game state
 current_state = GameState.WELCOME
 score = 0
-
-# Additional sprite group for explosions
-explosion_group = pygame.sprite.Group()
 
 
 def draw_text(text, pos):
@@ -88,23 +105,21 @@ while True:
                 current_state = GameState.PLAYING
             elif current_state == GameState.PLAYING:
                 Laser(laser_group, ship.rect.midtop)
-                laser_sound.play()  # Play laser sound
+                laser_sound.play()
             elif current_state == GameState.GAME_OVER:
                 # Reset game
                 current_state = GameState.PLAYING
                 score = 0
-                # Clear all sprites
                 meteor_group.empty()
                 laser_group.empty()
                 explosion_group.empty()
 
         if event.type == meteor_timer and current_state == GameState.PLAYING:
             x_pos = random.randint(0, WINDOW_WIDTH)
-            # Add a random speed for each meteor (adjust values as needed)
             meteor_speed = random.uniform(4, 8)
             Meteor(meteor_group, (x_pos, -50), meteor_speed)
 
-    # background
+    # Draw background
     display_surface.blit(background_image, (0, 0))
 
     if current_state == GameState.WELCOME:
@@ -120,15 +135,15 @@ while True:
                 score += len(meteors_hit)
                 for meteor in meteors_hit:
                     Explosion(explosion_group, meteor.rect.center)
-                    explosion_sound.play()  # Play explosion sound
+                    explosion_sound.play()
 
         # Check for collisions between ship and meteors
         if pygame.sprite.spritecollide(ship, meteor_group, True):
             current_state = GameState.GAME_OVER
             Explosion(explosion_group, ship.rect.center)
-            explosion_sound.play()  # Play explosion sound
+            explosion_sound.play()
 
-        # Update and draw all sprite groups
+        # Update and draw sprites
         spaceship_group.draw(display_surface)
         spaceship_group.update()
         laser_group.draw(display_surface)
@@ -142,16 +157,12 @@ while True:
         draw_text(f"Score: {score}", (WINDOW_WIDTH - 100, 50))
 
     elif current_state == GameState.GAME_OVER:
-        # Continue showing explosions until they're done
         explosion_group.draw(display_surface)
         explosion_group.update()
-
         draw_text("GAME OVER", (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 - 50))
         draw_text(f"Final Score: {score}", (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
         draw_text("Click to Play Again", (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 50))
 
-    # Update the display
+    # Update display
     pygame.display.update()
-
-    # Control frame rate
     clock.tick(60)

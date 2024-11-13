@@ -1,12 +1,13 @@
 import pygame
 from settings import WINDOW_HEIGHT, IMAGES_DIR, load_image
 import random
+from utils import resource_path
 
 
 class Ship(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
-        self.image = load_image("player.png")
+        self.image = pygame.image.load(resource_path("space shooter/images/player.png"))
         self.rect = self.image.get_rect(center=(640, 360))
 
     def update(self):
@@ -36,7 +37,8 @@ class Meteor(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
         self.pos = pygame.math.Vector2(self.rect.topleft)
         self.speed = speed
-        self.direction = pygame.math.Vector2(random.uniform(-0.5, 0.5), 1).normalize()
+        direction = pygame.math.Vector2(random.uniform(-0.5, 0.5), 1)
+        self.direction = direction.normalize()
 
     def update(self):
         self.pos += self.direction * self.speed
@@ -50,14 +52,22 @@ class Explosion(pygame.sprite.Sprite):
         super().__init__(groups)
         self.frames = []
         for i in range(1, 21):
-            frame_path = IMAGES_DIR / "explosion" / f"{i}.png"
-            if frame_path.exists():
+            frame_name = f"{i}.png"
+            try:
+                frame_path = resource_path(f"space shooter/images/explosion/{frame_name}")
                 frame = pygame.image.load(frame_path).convert_alpha()
                 self.frames.append(frame)
+            except (pygame.error, FileNotFoundError):
+                print(f"Could not load explosion frame: {frame_name}")
+                continue
+
+        if not self.frames:
+            self.frames = [load_image("meteor.png")]
+            print("Warning: No explosion frames loaded, using fallback image")
 
         self.frame_index = 0
         self.animation_speed = 0.5
-        self.image = self.frames[self.frame_index]
+        self.image = self.frames[0]
         self.rect = self.image.get_rect(center=pos)
 
     def update(self):
