@@ -54,7 +54,9 @@ class Explosion(pygame.sprite.Sprite):
         for i in range(1, 21):
             frame_name = f"{i}.png"
             try:
-                frame_path = resource_path(f"space shooter/images/explosion/{frame_name}")
+                frame_path = resource_path(
+                    f"space shooter/images/explosion/{frame_name}"
+                )
                 frame = pygame.image.load(frame_path).convert_alpha()
                 self.frames.append(frame)
             except (pygame.error, FileNotFoundError):
